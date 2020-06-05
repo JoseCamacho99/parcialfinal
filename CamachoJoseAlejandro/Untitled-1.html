@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Operaciones CSG</title>
+    <style>
+      html, body { margin: 0; padding: 0; overflow: hidden; }
+            html {
+            width: 100%;
+            height: 100%;
+            background: #11e8bb; /* Old browsers */
+            background: -moz-linear-gradient(top, #1772CF 0%, #000000 50%); /* FF3.6-15 */
+            background: -webkit-linear-gradient(top, #1772CF 0%,#000000 50%); /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom, #1772CF 0%,#000000 50%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3C0670', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
+        }
+    </style>
+  </head>
+  <body>
+    <div id="canvas"></div>
+    <script src="js/three.js"></script>
+	<script src="js/controls/OrbitControls.js"></script>
+	<script src="js/csg.js"></script>
+	<script src="js/THREE.CSG.js"></script>
+    <script>
+		var scene, aspect, camera, camera2, renderer, controls;
+        var spotLight,spotLight2;
+        var mapWidth = 320, mapHeight = 240;
+        var w = window.innerWidth, h = window.innerHeight;
+        var cubom;
+        		var upArrow = false;
+		var downArrow = false;
+		var leftArrow = false;
+		var rightArrow = false;
+        var pi=3.1415;
+        var particulas;
+        var pi=3.1415;
+        var spotLight;
+        var thetaSum=0;
+        var positivo=false;
+		init();
+		animate();
+		function init(){
+			//INICIALIZACIÓN
+	        scene = new THREE.Scene();
+            scene.background = new THREE.Color( 0x000000 );
+	        aspect = window.innerWidth / window.innerHeight;
+            
+	        camera = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000);
+            camera2 = new THREE.PerspectiveCamera( 45, 1.33, 0.1, 50);
+			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });;
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+            document.getElementById('canvas').appendChild(renderer.domElement);
+	        
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+                        var vector = new THREE.Vector3();
+			camera2.getWorldDirection( vector );
+			console.log(vector);
+			//ELEMENTOS COMUNES
+			var size = 10;
+			var arrowSize = 1;
+			var divisions = size;
+			var origin = new THREE.Vector3( 0, 0, 0 );
+			var x = new THREE.Vector3( 1, 0, 0 );
+			var y = new THREE.Vector3( 0, 1, 0 );
+		  	var z = new THREE.Vector3( 0, 0, 1 );
+		  	var color = new THREE.Color( 0x333333 );
+		  	var colorR = new THREE.Color(0x6BDAFF);
+		  	var colorG = new THREE.Color( 0x33AA33 );
+		  	var colorB = new THREE.Color( 0x333366 );
+			var onKeyDown = function ( event ) {
+				switch ( event.keyCode ) {
+					case 87: // TRASLADAR ADELANTE
+						upArrow = true;
+						break;
+					case 83: // TRASLADAR ATRÁS
+						downArrow = true;
+						break;
+
+				}
+			};	  
+		  			
+			var onKeyUp = function ( event ) {
+				switch ( event.keyCode ) {
+					case 87: // TRASLADAR
+						upArrow = false;
+						break;
+					case 83: // TRASLADAR
+						downArrow = false;
+						break;
+
+				}
+			};	  	
+			
+			document.addEventListener( 'keydown', onKeyDown, false );
+			document.addEventListener( 'keyup', onKeyUp, false );
+            
+            
+            particulas = new THREE.Light;
+            //scene.add(particulas);
+            var geometryp = new THREE.SphereGeometry(3, 32, 32);
+              var material = new THREE.MeshStandardMaterial( { color: 0x2CFF5A, metalness: 0.1, roughness: 50.1, transparent:true, opacity: 0.5  } );
+            
+              for (var i = 0; i < 1000; i++) {
+              var mesh = new THREE.Mesh(geometryp, material);
+            mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+            mesh.position.multiplyScalar(90 + (Math.random() * 700));
+            mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+            //particulas.add(mesh);
+              }
+              		  	//CREAR LAS GRILLAS PARA EL ESCENARIO
+		  	var axesHelper = new THREE.AxesHelper( size );
+			scene.add( axesHelper );
+			
+		  	var gridHelperXZ = new THREE.GridHelper( size, divisions, color, color );
+			scene.add( gridHelperXZ );
+            
+            //ROTARLAS PARA QUE QUEDEN EN EL ESPACIO ADECUADO
+            gridHelperXZ.rotateOnWorldAxis ( y, THREE.Math.degToRad(90) );
+
+            //CREAR ILUMINACIÓN
+            
+            var widthr = 5;
+            var heightr = 10;
+            var intensity = 100000;
+            var rectLight = new THREE.RectAreaLight( 0xffffff, intensity,  widthr, heightr );
+            rectLight.position.set( 0, 70, -10 );
+            rectLight.lookAt( 0, 90, -50 );
+            scene.add( rectLight );
+
+            rectLightHelper = new THREE.RectAreaLightHelper( rectLight );
+            rectLight.add( rectLightHelper );
+            var pointLighta = new THREE.PointLight(0xFFFFFF,10, 10);
+            pointLighta.position.set(5, 4, 5);
+           scene.add(pointLighta);
+            
+            
+                        var pointLightb = new THREE.PointLight(0xFFFFFF,10, 10);
+            pointLightb.position.set(-5, 4, 5);
+           scene.add(pointLightb);
+            
+            var pointLightc = new THREE.PointLight(0xFFFFFF,10, 10);
+            pointLightc.position.set(-5, 4, -5);
+           scene.add(pointLightc);
+           var pointLightd = new THREE.PointLight(0xFFFFFF,10, 10);
+            pointLightd.position.set(5, 4, -5);
+           scene.add(pointLightd);
+                       var pointLightte = new THREE.PointLight(0x9626ED,50, 10);
+            pointLightte.position.set(0, 10, 0);
+           scene.add(pointLightte);
+            
+            var pointLighttr = new THREE.PointLight(0x3DED15,10, 10);
+            pointLighttr.position.set(5, 5, 0);
+           scene.add(pointLighttr);
+            
+                        var pointLighttq = new THREE.PointLight(0xEDCE5C,10, 10);
+            pointLighttq.position.set(5, 5, -3);
+           scene.add(pointLighttq);
+            
+                                    var pointLightty = new THREE.PointLight(0xDB2920,10, 10);
+            pointLightty.position.set(5, 5, -5);
+           scene.add(pointLightty);
+            
+           // scene.add(pointLight2);
+                        var ambient = new THREE.AmbientLight( 0xffffff, 1 );
+            //scene.add( ambient );
+                spotLight = new THREE.SpotLight( 0x124587, 100 );
+				spotLight.position.set( 0, 10, -2 );
+				spotLight.angle = -Math.PI / 24;
+				spotLight.penumbra = 0.5;
+				spotLight.decay = 1;
+				spotLight.distance = 15;
+
+				spotLight.castShadow = true;
+				spotLight.shadow.mapSize.width = 1024;
+				spotLight.shadow.mapSize.height = 1024;
+				spotLight.shadow.camera.near = 10;
+				spotLight.shadow.camera.far = 200;
+                //spotLight.lookAt( 0,0,0 );
+				scene.add( spotLight );
+            var lightHelper = new THREE.SpotLightHelper( spotLight );
+				scene.add( lightHelper );
+            	spotLight2 = new THREE.SpotLight( 0x2E57FA, 100 );
+				spotLight2.position.set( 0, 10, 5 );
+				spotLight2.angle = -Math.PI / 24;
+				spotLight2.penumbra = 0.5;
+				spotLight2.decay = 1;
+				spotLight2.distance = 15;
+
+				spotLight2.castShadow = true;
+				spotLight2.shadow.mapSize.width = 1024;
+				spotLight2.shadow.mapSize.height = 1024;
+				spotLight2.shadow.camera.near = 10;
+				spotLight2.shadow.camera.far = 200;
+           //spotLight2.lookAt( 0,0,0 );
+				scene.add( spotLight2 );
+            
+            
+            var lightHelper = new THREE.SpotLightHelper( spotLight2 );
+				scene.add( lightHelper );
+                        var pointLight2 = new THREE.PointLight(0xFFFFFF,10, 10);
+            pointLight2.position.set(0, 5, 0);
+            //var helper = new THREE.PointLightHelper( pointLight2, .3 );
+            //scene.add(helper);
+           // scene.add(pointLight2);
+            //scene.add(pointLight2);
+            
+            //MATERIALES	
+            
+
+
+            
+            
+            
+            
+            var plasticBase = new THREE.TextureLoader().load( 'texturaplastico/scuffed-plastic4-alb.png' );
+            var plasticBase2 = new THREE.TextureLoader().load( 'texturaplastico/scuffed-plastic5-alb.png' );
+            var plasticNormal = new THREE.TextureLoader().load( 'texturaplastico/scuffed-plastic-normal.png' );                                                                                                                       var plasticRoughness = new THREE.TextureLoader().load( 'texturaplastico/scuffed-plastic-normal.png' );
+            var plasticmetal = new THREE.TextureLoader().load( 'texturaplastico/scuffed-plastic-metal.png' );
+
+            
+                    var plasticmaterial = new THREE.MeshStandardMaterial( { 
+                    color: 0xFF4F42, 
+                       // metalness:plasticmetalness,
+                    roughness: plasticRoughness,
+                     metalness:.3,
+				    map: plasticBase,
+					normalMap: plasticNormal,
+                   
+				} );
+                                var plasticmaterial2 = new THREE.MeshStandardMaterial( { 
+                    color: 0xffffff, 
+                       // metalness:plasticmetalness,
+                    roughness: plasticRoughness,
+                    metalness:.3,
+				    map: plasticBase2,
+					normalMap: plasticNormal,
+                   
+				} );
+                                
+                                var plasticmaterial3 = new THREE.MeshStandardMaterial( { 
+                    color: 0xE0FAD9, 
+                       // metalness:plasticmetalness,
+                    roughness: plasticRoughness,
+                    metalness:.3,
+				    map: plasticBase2,
+					normalMap: plasticNormal,
+                   
+				} );
+            
+                        
+            var dirtBase2 = new THREE.TextureLoader().load( 'dirt/rocky_dirt1-albedo.png' );
+            var dirtNormal = new THREE.TextureLoader().load( 'dirt/rocky_dirt1-normal-dx.png' );                                                                                                                    var dirtRoughness = new THREE.TextureLoader().load( 'dirt/rocky_dirt1_Roughness.png' );
+            var dirtmetal = new THREE.TextureLoader().load( 'dirt/scuffed-plastic-metal.png' );
+
+            
+                    var dirtmaterial = new THREE.MeshStandardMaterial( { 
+                    color: 0xFF4F42, 
+                       // metalness:plasticmetalness,
+                    roughness: dirtRoughness,
+                     metalness:.3,
+				    map: dirtBase2,
+					normalMap: dirtNormal,
+                   
+				} );
+            
+            
+            
+                       
+            var metalBase = new THREE.TextureLoader().load( 'metal/pitted-metal_albedo.png' );
+            var metalNormal = new THREE.TextureLoader().load( 'metal/pitted-metal_normal-dx.png' );                                                                                                                      
+            var metalmetal = new THREE.TextureLoader().load( 'metal/pitted-metal_metallic.png' );
+                        var metalRoughness = new THREE.TextureLoader().load( 'metal/pitted-metal_roughness.png' );
+
+            
+                    var metalmaterial = new THREE.MeshStandardMaterial( { 
+                    color: 0x434b4d, 
+                        metalness: .5,
+                    roughness: metalRoughness,
+                     //metalness:.9,
+				    map: metalBase,
+					normalMap: metalNormal,
+                   
+				} );
+            
+            
+            
+            
+            
+            var telaBase = new THREE.TextureLoader().load( 'tela/old-soiled-cloth1-albedo.png' );
+            var telaNormal = new THREE.TextureLoader().load( 'tela/old-soiled-cloth1-Normal-dx.png' );                                                                                                                      
+            var telametal = new THREE.TextureLoader().load( 'tela/pitted-metal_metallic.png' );
+            var telaRoughness = new THREE.TextureLoader().load( 'tela/old-soiled-cloth1-Roughness.png' );
+
+            
+                    var telamaterial = new THREE.MeshStandardMaterial( { 
+                    color: 0xffffff, 
+                        metalness: .1,
+                    roughness: telaRoughness,
+                     //metalness:.9,
+				    map: telaBase,
+					normalMap: telaNormal,
+                   
+				} );
+            
+            
+            
+            var material = new THREE.MeshBasicMaterial( {color: 0xFF4E45} );
+            var material2 = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+            var material3 = new THREE.MeshBasicMaterial( {color: 0x18A14F} );
+            
+            var prueba= new THREE.MeshStandardMaterial( {
+                color: 0x91FF49,
+
+                transparent: true
+            } );
+            
+            
+            
+            //GEOMETRIAS
+            
+            
+            
+            
+            var geometry1 = new THREE.CylinderGeometry( 5, 5, 1.5, 32 );
+            var geometry2 = new THREE.CylinderGeometry( 5.5, 5.5, 1.2, 32 );
+            var geometry3 = new THREE.CylinderGeometry( 7, 7, .5, 32 );
+            var geometry4 = new THREE.CylinderGeometry( 8, 8, .4, 32 );
+            var geometry5 = new THREE.CylinderGeometry( 9, 9, .3, 32 );
+            
+            //geometrias csg
+            var geocu = new THREE.BoxGeometry(5,5,10);
+            
+            var geocum = new THREE.BoxGeometry(1,1,1);
+            
+            var geometrypi = new THREE.PlaneGeometry( 25, 25, 32 );
+            
+            
+            
+            var cilindro = new THREE.CylinderGeometry(.3,.3,8,32);
+            
+            
+            //geo sillas
+            var si1=new THREE.BoxGeometry(.5,.5,.5);
+            
+            
+            
+            var centro = new THREE.Mesh( geometry1, plasticmaterial);
+            var centro2 = new THREE.Mesh( geometry2, plasticmaterial2 );
+            var centro3 = new THREE.Mesh( geometry3, plasticmaterial3 );
+            var centro4 = new THREE.Mesh( geometry4, plasticmaterial);
+            var centro5 = new THREE.Mesh( geometry5, material2 );
+            
+            var cilindro1= new THREE.Mesh(cilindro,metalmaterial);
+            var cilindro2= new THREE.Mesh(cilindro,metalmaterial);
+            var cilindro3= new THREE.Mesh(cilindro,metalmaterial);
+            var cilindro4= new THREE.Mesh(cilindro,metalmaterial);
+            var cubo1 = new THREE.Mesh( geocu, prueba );
+            
+             cubom = new THREE.Mesh( geocum, prueba );
+            //SILLAS
+            
+            
+            
+            var max=pi/4;
+            radio = 10;
+            
+            for( var i = 0; i < 20; i++ ){
+				for( var theta=(3*pi)/2; theta < pi*2; theta += pi/40 ){
+                    for( var sigma = 0; sigma<=pi*2;sigma +=pi/4){
+                    for(var j= 0;j<=4;j+=1){
+					var silla = new THREE.Mesh( si1, telamaterial  );
+					silla.position.x = ( 10 * Math.cos(theta)+j );
+					silla.position.z = ( 10 * Math.sin(theta)-j );
+                    silla.position.y= (1+j);
+
+					scene.add(silla);
+                    
+					}
+                    }
+				}
+            }
+            
+                        for( var i = 0; i < 20; i++ ){
+				for( var theta=pi/2; theta < pi; theta += pi/40 ){
+                    for( var sigma = 0; sigma<=pi*2;sigma +=pi/4){
+                    for(var j= 0;j<=4;j+=1){
+					var silla2 = new THREE.Mesh( si1, telamaterial  );
+					silla2.position.x = ( 10 * Math.cos(theta)-j );
+					silla2.position.z = ( 10 * Math.sin(theta)+j );
+                    silla2.position.y= (1+j);
+
+					scene.add(silla2);
+                    
+					}
+                    }
+				}
+            }
+
+			
+            var plano = new THREE.Mesh( geometrypi, dirtmaterial );
+            //TRASLACIONES Y ROTACIONES
+            centro.translateY(0.75);
+            centro2.translateY(0.6);
+            centro3.translateY(0.25);
+            centro4.translateY(0.2);
+            centro5.translateY(0.15);
+            
+            cilindro1.translateX(-5);
+            cilindro1.translateZ(5);
+            cilindro1.translateY(4);
+            cilindro2.translateX(5);
+            cilindro2.translateZ(-5);
+            cilindro2.translateY(4);
+            
+             cilindro3.translateX(-5);
+            cilindro3.translateZ(-5);
+            cilindro3.translateY(4);
+            plano.rotateX(-pi/2);
+            
+            cubom.translateY(4);
+            
+            
+            cilindro4.translateX(5);
+            cilindro4.translateZ(5);
+            cilindro4.translateY(4);
+            
+            //cubo1.translateX(-15);
+            //ADD SCENE
+            
+            scene.add( centro );
+            scene.add( centro2 );
+            scene.add( centro3 );
+            scene.add( centro4 );
+            scene.add( centro5 );
+            scene.add( plano );
+            scene.add( cilindro1 );
+            scene.add( cilindro2 );
+            scene.add( cilindro3 );
+            scene.add( cilindro4 );
+            
+            scene.add( cubom );
+            //scene.add( cubo1 );
+            /*var boxCSG1 = THREE.CSG.fromMesh( bloque1 );
+            var result1 = boxCSG1.subtract( boxCSG2 ).subtract(cilCSG1).subtract(boxCSG3);
+            var C2T1 = THREE.CSG.toMesh( result1,);
+            C2T1.material = sideMaterial;
+            scene.add(C2T1);*/
+            
+                        var curve2D = [];
+                curve2D[0] = new THREE.Vector2( 5, 30 );
+                curve2D[1] = new THREE.Vector2( 20, 60 );
+                curve2D[2] = new THREE.Vector2( 28, 78 );
+                curve2D[3] = new THREE.Vector2( 30, 80 );
+                curve2D[4] = new THREE.Vector2( 70, 55 );
+                curve2D[5] = new THREE.Vector2( 70, 50 );
+                curve2D[5] = new THREE.Vector2( 70, 35 );
+                curve2D[6] = new THREE.Vector2( 60, 0 );		
+                curve2D[7] = new THREE.Vector2( 40, 0 );
+                curve2D[8] = new THREE.Vector2( 40, 0 );
+                curve2D[9] = new THREE.Vector2( 40, 0 );
+                curve2D[10] = new THREE.Vector2( 40, 0 );
+				
+			var shape = new THREE.Shape();
+			shape.moveTo(0,0);
+			shape.splineThru(curve2D);
+            
+            var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+            var resolution = 50;
+            var points = shape.getPoints( resolution );
+            var geometry = new THREE.BufferGeometry().setFromPoints( points );
+            // Create the final object to add to the scene
+            var curveObject = new THREE.Line( geometry, material );
+            
+			//EXTRUDE
+			var extrudeSettings = {
+				steps: 2,
+				amount: 3,
+				bevelEnabled: false,
+			};
+
+			var geometryExt = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+			var materialExt= new THREE.MeshStandardMaterial( { 
+				color: 0xAA3333, 
+				metalness: 0.5, 
+				roughness: 0.1,
+				opacity: 0.75,
+				transparent: true			
+			} );
+			
+			var mesh = new THREE.Mesh( geometryExt, materialExt ) ;
+            mesh.rotateX(pi/2);
+            mesh.translateZ(-15);
+            mesh.translateX(-20);
+            mesh.translateY(-20);
+			scene.add( mesh );
+            
+
+
+            
+            
+
+            			camera.position.x = 5;
+			camera.position.y = 10;
+		  	camera.position.z = 30;
+			
+		  	camera.lookAt( origin );
+            }
+            		function animate(){
+              //particulas.rotation.x += 0.0000;
+            spotLight.rotation.y -= 0.0400;
+            spotLight2.rotation.y -= 0.0400;
+			requestAnimationFrame( animate );
+			controls.update();
+			render();
+		}
+		function render(){
+			
+            renderer.setViewport( 0, 0, w, h );
+            renderer.setScissor( 0, 0, w, h );
+            renderer.render( scene, camera );
+            renderer.setViewport( 10, 10, mapWidth, mapHeight );
+            renderer.setScissor( 10, 10, mapWidth, mapHeight );
+            renderer.setScissorTest( true );
+            renderer.render( scene, camera2 );
+		var tx=0, ty=0, tz=0;	//Variables para traslacion
+		var sc = 1;				//Variable para escala
+		var theta=0;			//Variable para ángulo de rotacion de piernas
+		var sigma=0;			//Variable para ángulo de rotación de caderas
+		
+		if(thetaSum>=90*Math.PI/180)
+			positivo = false;
+		if(thetaSum<=-90*Math.PI/180)
+			positivo = true;
+		
+		if(upArrow) {
+			tx=0; ty=0; tz=.1;
+
+		}
+		if(downArrow) {
+			tx=0; ty=0; tz=-.1;
+			if(positivo)
+				theta = .1;
+			else
+				theta = -.1;
+		}
+		thetaSum+=theta;
+		
+		if(rightArrow)
+			sigma = -.1;
+		if(leftArrow)
+			sigma = .1;
+		
+		//MATRIZ DE TRASLACIÓN
+		var t = new THREE.Matrix4();
+		t.set( 	1, 0, 0, tx,
+				0, 1, 0, ty, 
+				0, 0, 1, tz,
+				0, 0, 0, 1	);
+		
+		cubom.matrix.multiply(t); 
+		}
+    </script>
+  </body>
+</html>
